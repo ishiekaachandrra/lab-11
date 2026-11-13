@@ -92,7 +92,8 @@ public class FamilyTree {
 
         File treeFile = chooser.getSelectedFile();
 
-        // Read the input file.
+        // Parse the input file. Create a FileReader that reads treeFile.
+        // Create a BufferedReader that reads from the FileReader.
         FileReader fr = new FileReader(treeFile);
         BufferedReader br = new BufferedReader(fr);
 
@@ -111,18 +112,18 @@ public class FamilyTree {
     private void addLine(String line) throws TreeException {
 
         // Extract parent and array of children.
-        int colonIndex = line.indexOf(':');
+        int colonIndex = line.indexOf(":");
 
         if (colonIndex < 0)
-            throw new TreeException("Invalid line: missing colon in " + line);
+            throw new TreeException("Missing colon in line: " + line);
 
-        String parent = line.substring(0, colonIndex).trim();
-
-        String childrenString = line.substring(colonIndex + 1).trim();
-
+        String parent = line.substring(0, colonIndex);
+        String childrenString = line.substring(colonIndex + 1);
         String[] childrenArray = childrenString.split(",");
 
-        // Find parent node.
+        // Find parent node. If root is null then the tree is empty and the
+        // parent node must be constructed. Otherwise the parent node should be
+        // somewhere in the tree.
         TreeNode<String> parentNode;
 
         if (root == null)
@@ -131,20 +132,11 @@ public class FamilyTree {
             parentNode = root.getNodeWithName(parent);
 
             if (parentNode == null)
-                throw new TreeException("Parent node not found: " + parent);
+                throw new TreeException("Parent not found: " + parent);
         }
 
-        // Add child nodes to parentNode.
-        for (String childName : childrenArray) {
-            childName = childName.trim();
-
-            if (!childName.isEmpty()) {
-                TreeNode<String> childNode =
-                    new TreeNode<String>(childName);
-
-                parentNode.addChild(childNode);
-            }
-        }
+        for (String childName : childrenArray)
+            parentNode.addChild(new TreeNode<String>(childName));
     }
 
     //
@@ -157,12 +149,12 @@ public class FamilyTree {
         TreeNode<String> node1 = root.getNodeWithName(name1);
 
         if (node1 == null)
-            throw new TreeException("Node not found: " + name1);
+            throw new TreeException("Name not found: " + name1);
 
         TreeNode<String> node2 = root.getNodeWithName(name2);
 
         if (node2 == null)
-            throw new TreeException("Node not found: " + name2);
+            throw new TreeException("Name not found: " + name2);
 
         // Get ancestors of node1 and node2.
         ArrayList<TreeNode<String>> ancestorsOf1 =
@@ -171,7 +163,8 @@ public class FamilyTree {
         ArrayList<TreeNode<String>> ancestorsOf2 =
             node2.collectAncestorsToList();
 
-        // Find the most recent common ancestor.
+        // Check members of ancestorsOf1 in order until you find a node
+        // that is also an ancestor of 2.
         for (TreeNode<String> n1 : ancestorsOf1) {
             if (ancestorsOf2.contains(n1))
                 return n1;
